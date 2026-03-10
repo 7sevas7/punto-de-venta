@@ -1,7 +1,9 @@
 export enum EnumTypeRegistry {
     CreateUserDto,
-    UpdateUserDto
+    UpdateUserDto,
+
 }
+
 export const AliasRegistry: Record<EnumTypeRegistry, Record<string, string>> = {
     [EnumTypeRegistry.CreateUserDto]: {
         name: 'Nombre',
@@ -15,3 +17,19 @@ export const AliasRegistry: Record<EnumTypeRegistry, Record<string, string>> = {
     },
     // Puedes seguir agregando DTOs aquí
 };
+
+
+const AliasRegistrsy = {
+    CreateUserDto: {
+        name: 'Nombre',
+        email: 'Correo electrónico',
+        password: 'Contraseña',
+        role: 'Rol de Usuario',
+    },
+    UpdateUserDto: {
+        email: 'Correo electrónico',
+        role: 'Rol',
+    },
+};
+
+type EnumTypeRegistryy = keyof typeof AliasRegistrsy; 

@@ -4,19 +4,19 @@ export class CreateUserDto {
 
 
     @IsString()
-    @IsNotEmpty()
+    @IsNotEmpty({ message: 'El nombre es requerido' })
     name: string;
 
     @IsEmail({}, { message: 'Email invalido' })
-    @IsNotEmpty()
+    @IsNotEmpty({ message: 'El email es requerido' })
     email: string;
 
     @IsString()
-    @IsNotEmpty()
-    @MinLength(6)
+    @IsNotEmpty({ message: 'La contraseña es requerida' })
+    @MinLength(6, { message: 'La contraseña debe tener al menos 6 caracteres' })
     password: string;
 
     @IsString()
-    @IsNotEmpty()
+    @IsNotEmpty({ message: 'El rol es requerido' })
     role: string;
 }

@@ -2,16 +2,17 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ValidationPipe } from './dto/validation.pipe';
-import { EnumTypeRegistry } from './dto/alias.properties';
+import { ValidationPipe } from '../common/pipes/validation.pipe';
+import { EnumTypeRegistry } from '../common/pipes/alias.properties';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Post()
-  create(@Body(new ValidationPipe(EnumTypeRegistry.CreateUserDto)) createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  async create(@Body() createUserDto: CreateUserDto): Promise<any> {
+    console.log(createUserDto);
+    return await this.userService.create(createUserDto);
   }
 
   @Get()
@@ -25,12 +26,12 @@ export class UserController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<any> {
+    return await this.userService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  async removes(@Param('id') id: string): Promise<any> {
+    return await this.userService.remove(id);
   }
 }
