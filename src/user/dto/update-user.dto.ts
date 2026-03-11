@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
 import { IsString, IsEmail, IsNotEmpty, MinLength, IsBoolean } from 'class-validator'
-
+import { RolesUser } from './roles-user';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
 
@@ -16,7 +16,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
 
     @IsString()
     @IsNotEmpty({ message: 'El rol es requerido' })
-    role?: string | undefined;
+    role?: RolesUser | undefined;
 
     @IsBoolean()
     @IsNotEmpty({ message: 'El estado es requerido' })

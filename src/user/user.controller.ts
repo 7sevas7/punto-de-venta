@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, ConflictException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -10,9 +10,15 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Post()
-  async create(@Body() createUserDto: CreateUserDto): Promise<any> {
-    console.log(createUserDto);
-    return await this.userService.create(createUserDto);
+  async create(@Body(new ValidationPipe(EnumTypeRegistry.CreateUserDto)) createUserDto: CreateUserDto): Promise<any> {
+    try {
+
+      return await this.userService.create(createUserDto);
+
+    } catch (error) {
+      const field = Object.keys(error.keyValue)[0];
+      throw new ConflictException(`El field ${field} ya esta registrado`);
+    }
   }
 
   @Get()

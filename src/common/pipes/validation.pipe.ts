@@ -22,6 +22,7 @@ export class ValidationPipe implements PipeTransform<any> {
             }));
             throw new BadRequestException({ message: 'Validation failed', errors: mapErrors });
         }
+        return value;
     }
     private toValidate(metatype: Function): boolean {
         const types: Function[] = [String, Boolean, Number, Array, Object];
