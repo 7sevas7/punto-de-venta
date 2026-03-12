@@ -1,15 +1,21 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
 import { Model } from 'mongoose';
-import * as  bcrypt from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import { LoginDto } from 'src/auth/login.dto';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectModel(User.name) private readonly userModel: Model<User>) { }
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     console.log(createUserDto);
@@ -23,9 +29,10 @@ export class UserService {
   }
 
   async findOneFilter(logindto: LoginDto) {
-
-    let user = await this.userModel.findOne({ isActive: true, email: logindto.email }).exec();
-    if (!user) throw new NotFoundException("Usuario no encontrado");
+    let user = await this.userModel
+      .findOne({ isActive: true, email: logindto.email })
+      .exec();
+    if (!user) throw new NotFoundException('Usuario no encontrado');
     let isMatch = await bcrypt.compare(logindto.password, user?.password);
     if (!isMatch) {
       throw new UnauthorizedException();
