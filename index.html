@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DB Design — Minisuper POS</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2230;
+    --accent1: #f97316;
+    --accent2: #3b82f6;
+    --accent3: #10b981;
+    --accent4: #a855f7;
+    --accent5: #f59e0b;
+    --accent6: #ec4899;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --card-bg: #13161f;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  header .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent1);
+    border: 1px solid var(--accent1);
+    padding: 4px 12px;
+    border-radius: 2px;
+    letter-spacing: 0.1em;
+    margin-bottom: 16px;
+  }
+
+  header h1 {
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 800;
+    line-height: 1.1;
+    background: linear-gradient(135deg, #fff 0%, var(--accent1) 60%, var(--accent5) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 24px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .collection {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+    position: relative;
+  }
+
+  .collection:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+  }
+
+  .collection::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--col-accent, var(--accent1));
+  }
+
+  .col-header {
+    padding: 20px 24px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .col-icon {
+    font-size: 22px;
+    line-height: 1;
+  }
+
+  .col-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+  }
+
+  .col-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    background: rgba(255,255,255,0.06);
+    color: var(--muted);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-left: auto;
+  }
+
+  .fields {
+    padding: 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .field {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+
+  .field:hover { background: rgba(255,255,255,0.03); }
+
+  .field-name {
+    color: var(--col-accent, var(--accent1));
+    min-width: 130px;
+    font-weight: 700;
+  }
+
+  .field-type {
+    color: var(--accent2);
+    min-width: 80px;
+  }
+
+  .field-desc {
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .key-icon {
+    font-size: 10px;
+    margin-right: 2px;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    padding: 10px 24px 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+  }
+
+  .relations {
+    padding: 12px 24px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  .rel-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .rel-tag::before { content: '→ '; }
+
+  /* Full-width section */
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  .diagram-note {
+    max-width: 1400px;
+    margin: 40px auto 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px;
+  }
+
+  .diagram-note h2 {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 20px;
+    color: var(--accent5);
+  }
+
+  .tips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .tip {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+  }
+
+  .tip h3 {
+    font-size: 13px;
+    color: #fff;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tip p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .flow {
+    max-width: 1400px;
+    margin: 24px auto 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 32px;
+  }
+
+  .flow h2 { font-size: 20px; font-weight: 800; margin-bottom: 24px; color: var(--accent3); }
+
+  .flow-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0;
+    align-items: center;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 100px;
+  }
+
+  .step-num {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--step-color, var(--accent3));
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 16px; color: #fff;
+  }
+
+  .step-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    max-width: 90px;
+  }
+
+  .arrow {
+    font-size: 20px;
+    color: var(--border);
+    padding: 0 8px;
+    margin-bottom: 20px;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 60px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="tag">MongoDB Schema Design v1.0</div>
+  <h1>Minisuper — Punto de Venta</h1>
+  <p>// Base de datos flexible · Inventario · Pagos con tarjeta · Abarrotes + Ferretería + Medicamentos + Licores + Frutas & Verduras</p>
+</header>
+
+<div class="grid">
+
+  <!-- PRODUCTS -->
+  <div class="collection" style="--col-accent: #f97316;">
+    <div class="col-header">
+      <div class="col-icon">📦</div>
+      <div class="col-name">products</div>
+      <div class="col-badge">Colección central</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span><span class="field-desc">ID único auto-generado</span></div>
+      <div class="field"><span class="field-name">sku</span><span class="field-type">String</span><span class="field-desc">Código único del producto (barcode o manual)</span></div>
+      <div class="field"><span class="field-name">name</span><span class="field-type">String</span><span class="field-desc">Nombre del producto</span></div>
+      <div class="field"><span class="field-name">description</span><span class="field-type">String</span><span class="field-desc">Descripción detallada</span></div>
+      <div class="field"><span class="field-name">category_id</span><span class="field-type">ObjectId</span><span class="field-desc">Ref → categories</span></div>
+      <div class="field"><span class="field-name">brand</span><span class="field-type">String</span><span class="field-desc">Marca</span></div>
+      <div class="field"><span class="field-name">unit</span><span class="field-type">String</span><span class="field-desc">pieza / kg / litro / gramo</span></div>
+      <div class="field"><span class="field-name">prices</span><span class="field-type">Object</span><span class="field-desc">{ cost, sale, wholesale }</span></div>
+      <div class="field"><span class="field-name">tax_rate</span><span class="field-type">Number</span><span class="field-desc">% IVA aplicable (0, 8, 16)</span></div>
+      <div class="field"><span class="field-name">images</span><span class="field-type">Array</span><span class="field-desc">URLs de imágenes</span></div>
+      <div class="field"><span class="field-name">attributes</span><span class="field-type">Object</span><span class="field-desc">Campos flexibles por categoría</span></div>
+      <div class="field"><span class="field-name">is_active</span><span class="field-type">Boolean</span><span class="field-desc">Para desactivar sin borrar</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">Date</span><span class="field-desc">Fecha de registro</span></div>
+    </div>
+    <div class="section-label">Ejemplo attributes por categoría</div>
+    <div class="fields" style="padding-top:8px">
+      <div class="field"><span class="field-name" style="color:#f59e0b">Medicamento</span><span class="field-desc" style="color:#94a3b8">{ requires_prescription, active_substance, dosage }</span></div>
+      <div class="field"><span class="field-name" style="color:#10b981">Licor</span><span class="field-desc" style="color:#94a3b8">{ alcohol_percentage, volume_ml, age_restricted: true }</span></div>
+      <div class="field"><span class="field-name" style="color:#a855f7">Ferretería</span><span class="field-desc" style="color:#94a3b8">{ material, dimensions, weight_kg }</span></div>
+      <div class="field"><span class="field-name" style="color:#ec4899">Frutas/Verduras</span><span class="field-desc" style="color:#94a3b8">{ sold_by_weight: true, origin }</span></div>
+    </div>
+    <div class="relations">
+      <span class="rel-tag">inventory</span>
+      <span class="rel-tag">categories</span>
+      <span class="rel-tag">sale_items</span>
+      <span class="rel-tag">purchase_items</span>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="collection" style="--col-accent: #a855f7;">
+    <div class="col-header">
+      <div class="col-icon">🏷️</div>
+      <div class="col-name">categories</div>
+      <div class="col-badge">Jerarquía flexible</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span><span class="field-desc">ID único</span></div>
+      <div class="field"><span class="field-name">name</span><span class="field-type">String</span><span class="field-desc">Ej: Abarrotes, Ferretería, Medicamentos...</span></div>
+      <div class="field"><span class="field-name">slug</span><span class="field-type">String</span><span class="field-desc">abarrotes, ferreteria, licores...</span></div>
+      <div class="field"><span class="field-name">parent_id</span><span class="field-type">ObjectId</span><span class="field-desc">Null = categoría raíz · Subcategorías anidadas</span></div>
+      <div class="field"><span class="field-name">icon</span><span class="field-type">String</span><span class="field-desc">Emoji o URL de ícono</span></div>
+      <div class="field"><span class="field-name">default_tax</span><span class="field-type">Number</span><span class="field-desc">IVA por defecto de la categoría</span></div>
+      <div class="field"><span class="field-name">age_restricted</span><span class="field-type">Boolean</span><span class="field-desc">true para licores, medicamentos</span></div>
+      <div class="field"><span class="field-name">requires_weight</span><span class="field-type">Boolean</span><span class="field-desc">true para frutas/verduras</span></div>
+      <div class="field"><span class="field-name">custom_fields</span><span class="field-type">Array</span><span class="field-desc">Campos extra definibles por categoría</span></div>
+      <div class="field"><span class="field-name">sort_order</span><span class="field-type">Number</span><span class="field-desc">Orden en el POS</span></div>
+    </div>
+    <div class="section-label">Categorías principales</div>
+    <div class="fields" style="padding-top:8px;">
+      <div class="field"><span class="field-desc">🛒 Abarrotes · 🔧 Ferretería · 💊 Medicamentos</span></div>
+      <div class="field"><span class="field-desc">🍾 Licores · 🥦 Frutas y Verduras</span></div>
+    </div>
+  </div>
+
+  <!-- INVENTORY -->
+  <div class="collection" style="--col-accent: #10b981;">
+    <div class="col-header">
+      <div class="col-icon">📊</div>
+      <div class="col-name">inventory</div>
+      <div class="col-badge">Control de stock</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">product_id</span><span class="field-type">ObjectId</span><span class="field-desc">Ref → products (único por producto)</span></div>
+      <div class="field"><span class="field-name">warehouse_id</span><span class="field-type">ObjectId</span><span class="field-desc">Ref → warehouses (almacén/tienda)</span></div>
+      <div class="field"><span class="field-name">quantity</span><span class="field-type">Number</span><span class="field-desc">Stock actual disponible</span></div>
+      <div class="field"><span class="field-name">reserved</span><span class="field-type">Number</span><span class="field-desc">Apartado / en proceso de venta</span></div>
+      <div class="field"><span class="field-name">min_stock</span><span class="field-type">Number</span><span class="field-desc">Mínimo para alerta de reorden</span></div>
+      <div class="field"><span class="field-name">max_stock</span><span class="field-type">Number</span><span class="field-desc">Capacidad máxima</span></div>
+      <div class="field"><span class="field-name">reorder_point</span><span class="field-type">Number</span><span class="field-desc">Cantidad para generar orden automática</span></div>
+      <div class="field"><span class="field-name">location</span><span class="field-type">String</span><span class="field-desc">Pasillo / Estante / Sección física</span></div>
+      <div class="field"><span class="field-name">expiry_date</span><span class="field-type">Date</span><span class="field-desc">Para perecederos y medicamentos</span></div>
+      <div class="field"><span class="field-name">last_count_at</span><span class="field-type">Date</span><span class="field-desc">Último inventario físico</span></div>
+      <div class="field"><span class="field-name">updated_at</span><span class="field-type">Date</span><span class="field-desc">Última actualización</span></div>
+    </div>
+    <div class="relations">
+      <span class="rel-tag">inventory_movements</span>
+      <span class="rel-tag">products</span>
+      <span class="rel-tag">warehouses</span>
+    </div>
+  </div>
+
+  <!-- INVENTORY MOVEMENTS -->
+  <div class="collection" style="--col-accent: #06b6d4;">
+    <div class="col-header">
+      <div class="col-icon">🔄</div>
+      <div class="col-name">inventory_movements</div>
+      <div class="col-badge">Auditoría</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">product_id</span><span class="field-type">ObjectId</span><span class="field-desc">Producto afectado</span></div>
+      <div class="field"><span class="field-name">type</span><span class="field-type">String</span><span class="field-desc">in / out / adjustment / return / waste</span></div>
+      <div class="field"><span class="field-name">quantity</span><span class="field-type">Number</span><span class="field-desc">Cantidad (positiva o negativa)</span></div>
+      <div class="field"><span class="field-name">before_qty</span><span class="field-type">Number</span><span class="field-desc">Stock antes del movimiento</span></div>
+      <div class="field"><span class="field-name">after_qty</span><span class="field-type">Number</span><span class="field-desc">Stock después del movimiento</span></div>
+      <div class="field"><span class="field-name">reference_id</span><span class="field-type">ObjectId</span><span class="field-desc">ID de venta / compra / ajuste</span></div>
+      <div class="field"><span class="field-name">reference_type</span><span class="field-type">String</span><span class="field-desc">sale / purchase / adjustment</span></div>
+      <div class="field"><span class="field-name">user_id</span><span class="field-type">ObjectId</span><span class="field-desc">Quién realizó el movimiento</span></div>
+      <div class="field"><span class="field-name">notes</span><span class="field-type">String</span><span class="field-desc">Razón del movimiento</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">Date</span></div>
+    </div>
+  </div>
+
+  <!-- SALES -->
+  <div class="collection" style="--col-accent: #f59e0b;">
+    <div class="col-header">
+      <div class="col-icon">🧾</div>
+      <div class="col-name">sales</div>
+      <div class="col-badge">Transacciones POS</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">folio</span><span class="field-type">String</span><span class="field-desc">Número de ticket (VTA-00001)</span></div>
+      <div class="field"><span class="field-name">customer_id</span><span class="field-type">ObjectId</span><span class="field-desc">Opcional → customers</span></div>
+      <div class="field"><span class="field-name">cashier_id</span><span class="field-type">ObjectId</span><span class="field-desc">Cajero que realizó la venta</span></div>
+      <div class="field"><span class="field-name">register_id</span><span class="field-type">ObjectId</span><span class="field-desc">Caja registradora</span></div>
+      <div class="field"><span class="field-name">items</span><span class="field-type">Array</span><span class="field-desc">Embebido: productos vendidos</span></div>
+      <div class="field"><span class="field-name">subtotal</span><span class="field-type">Number</span></div>
+      <div class="field"><span class="field-name">tax_breakdown</span><span class="field-type">Object</span><span class="field-desc">{ iva0, iva8, iva16 } para CFDI</span></div>
+      <div class="field"><span class="field-name">discounts</span><span class="field-type">Number</span></div>
+      <div class="field"><span class="field-name">total</span><span class="field-type">Number</span></div>
+      <div class="field"><span class="field-name">payments</span><span class="field-type">Array</span><span class="field-desc">Métodos de pago usados</span></div>
+      <div class="field"><span class="field-name">change_given</span><span class="field-type">Number</span><span class="field-desc">Cambio entregado</span></div>
+      <div class="field"><span class="field-name">status</span><span class="field-type">String</span><span class="field-desc">completed / cancelled / refunded</span></div>
+      <div class="field"><span class="field-name">notes</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">Date</span></div>
+    </div>
+    <div class="section-label">Estructura de items (embebida)</div>
+    <div class="fields" style="padding-top:8px">
+      <div class="field"><span class="field-name" style="font-size:11px">items[n]</span><span class="field-desc">{ product_id, sku_snapshot, name_snapshot, qty, unit_price, discount, tax_rate, subtotal }</span></div>
+    </div>
+    <div class="section-label">Estructura de payments (embebida)</div>
+    <div class="fields" style="padding-top:8px">
+      <div class="field"><span class="field-name" style="font-size:11px">payments[n]</span><span class="field-desc">{ method: 'card'|'cash'|'transfer', amount, card_details: { last4, brand, auth_code } }</span></div>
+    </div>
+  </div>
+
+  <!-- PAYMENTS / CARD PROCESSING -->
+  <div class="collection" style="--col-accent: #ec4899;">
+    <div class="col-header">
+      <div class="col-icon">💳</div>
+      <div class="col-name">payment_transactions</div>
+      <div class="col-badge">Pago con tarjeta</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">sale_id</span><span class="field-type">ObjectId</span><span class="field-desc">Ref → sales</span></div>
+      <div class="field"><span class="field-name">provider</span><span class="field-type">String</span><span class="field-desc">conekta / stripe / clip / mercadopago</span></div>
+      <div class="field"><span class="field-name">provider_txn_id</span><span class="field-type">String</span><span class="field-desc">ID de la transacción en el proveedor</span></div>
+      <div class="field"><span class="field-name">amount</span><span class="field-type">Number</span><span class="field-desc">Monto cobrado</span></div>
+      <div class="field"><span class="field-name">currency</span><span class="field-type">String</span><span class="field-desc">MXN por defecto</span></div>
+      <div class="field"><span class="field-name">status</span><span class="field-type">String</span><span class="field-desc">pending / approved / declined / refunded</span></div>
+      <div class="field"><span class="field-name">card</span><span class="field-type">Object</span><span class="field-desc">{ last4, brand, type: debit/credit, holder_name }</span></div>
+      <div class="field"><span class="field-name">auth_code</span><span class="field-type">String</span><span class="field-desc">Código de autorización del banco</span></div>
+      <div class="field"><span class="field-name">terminal_id</span><span class="field-type">String</span><span class="field-desc">ID de la terminal física</span></div>
+      <div class="field"><span class="field-name">installments</span><span class="field-type">Number</span><span class="field-desc">Meses sin intereses (1 = contado)</span></div>
+      <div class="field"><span class="field-name">error_code</span><span class="field-type">String</span><span class="field-desc">Código si fue rechazada</span></div>
+      <div class="field"><span class="field-name">raw_response</span><span class="field-type">Object</span><span class="field-desc">Respuesta completa del proveedor</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">Date</span></div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="collection" style="--col-accent: #3b82f6;">
+    <div class="col-header">
+      <div class="col-icon">👤</div>
+      <div class="col-name">users</div>
+      <div class="col-badge">Personal del negocio</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">name</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">email</span><span class="field-type">String</span><span class="field-desc">Único, para login</span></div>
+      <div class="field"><span class="field-name">pin</span><span class="field-type">String</span><span class="field-desc">PIN de 4 dígitos (hash) para caja rápida</span></div>
+      <div class="field"><span class="field-name">password_hash</span><span class="field-type">String</span><span class="field-desc">Contraseña encriptada bcrypt</span></div>
+      <div class="field"><span class="field-name">role</span><span class="field-type">String</span><span class="field-desc">owner / admin / cashier / warehouse</span></div>
+      <div class="field"><span class="field-name">permissions</span><span class="field-type">Array</span><span class="field-desc">Permisos granulares opcionales</span></div>
+      <div class="field"><span class="field-name">is_active</span><span class="field-type">Boolean</span></div>
+      <div class="field"><span class="field-name">last_login</span><span class="field-type">Date</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">Date</span></div>
+    </div>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div class="collection" style="--col-accent: #84cc16;">
+    <div class="col-header">
+      <div class="col-icon">🧑‍🤝‍🧑</div>
+      <div class="col-name">customers</div>
+      <div class="col-badge">Clientes frecuentes</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">name</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">phone</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">email</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">rfc</span><span class="field-type">String</span><span class="field-desc">Para facturación</span></div>
+      <div class="field"><span class="field-name">address</span><span class="field-type">Object</span><span class="field-desc">{ street, city, state, zip }</span></div>
+      <div class="field"><span class="field-name">credit_limit</span><span class="field-type">Number</span><span class="field-desc">Límite de crédito (fiado)</span></div>
+      <div class="field"><span class="field-name">credit_balance</span><span class="field-type">Number</span><span class="field-desc">Deuda actual</span></div>
+      <div class="field"><span class="field-name">loyalty_points</span><span class="field-type">Number</span></div>
+      <div class="field"><span class="field-name">price_list</span><span class="field-type">String</span><span class="field-desc">retail / wholesale</span></div>
+      <div class="field"><span class="field-name">notes</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">Date</span></div>
+    </div>
+  </div>
+
+  <!-- SUPPLIERS -->
+  <div class="collection" style="--col-accent: #f97316;">
+    <div class="col-header">
+      <div class="col-icon">🚚</div>
+      <div class="col-name">suppliers</div>
+      <div class="col-badge">Proveedores</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">name</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">rfc</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">contact</span><span class="field-type">Object</span><span class="field-desc">{ name, phone, email }</span></div>
+      <div class="field"><span class="field-name">categories</span><span class="field-type">Array</span><span class="field-desc">Qué categorías surte</span></div>
+      <div class="field"><span class="field-name">payment_terms</span><span class="field-type">String</span><span class="field-desc">30, 60, 90 días / contado</span></div>
+      <div class="field"><span class="field-name">credit_limit</span><span class="field-type">Number</span></div>
+      <div class="field"><span class="field-name">current_debt</span><span class="field-type">Number</span></div>
+      <div class="field"><span class="field-name">notes</span><span class="field-type">String</span></div>
+      <div class="field"><span class="field-name">is_active</span><span class="field-type">Boolean</span></div>
+    </div>
+  </div>
+
+  <!-- PURCHASES -->
+  <div class="collection" style="--col-accent: #06b6d4;">
+    <div class="col-header">
+      <div class="col-icon">📥</div>
+      <div class="col-name">purchases</div>
+      <div class="col-badge">Entrada de mercancía</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">folio</span><span class="field-type">String</span><span class="field-desc">COM-00001</span></div>
+      <div class="field"><span class="field-name">supplier_id</span><span class="field-type">ObjectId</span><span class="field-desc">Ref → suppliers</span></div>
+      <div class="field"><span class="field-name">invoice_number</span><span class="field-type">String</span><span class="field-desc">Factura del proveedor</span></div>
+      <div class="field"><span class="field-name">items</span><span class="field-type">Array</span><span class="field-desc">{ product_id, qty, cost, expiry_date }</span></div>
+      <div class="field"><span class="field-name">total</span><span class="field-type">Number</span></div>
+      <div class="field"><span class="field-name">status</span><span class="field-type">String</span><span class="field-desc">pending / received / partial / cancelled</span></div>
+      <div class="field"><span class="field-name">received_by</span><span class="field-type">ObjectId</span><span class="field-desc">Usuario que recibió</span></div>
+      <div class="field"><span class="field-name">expected_at</span><span class="field-type">Date</span></div>
+      <div class="field"><span class="field-name">received_at</span><span class="field-type">Date</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">Date</span></div>
+    </div>
+  </div>
+
+  <!-- CASH REGISTERS -->
+  <div class="collection" style="--col-accent: #f59e0b;">
+    <div class="col-header">
+      <div class="col-icon">🏧</div>
+      <div class="col-name">cash_registers</div>
+      <div class="col-badge">Cortes de caja</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">🔑 _id</span><span class="field-type">ObjectId</span></div>
+      <div class="field"><span class="field-name">name</span><span class="field-type">String</span><span class="field-desc">Caja 1, Caja 2...</span></div>
+      <div class="field"><span class="field-name">cashier_id</span><span class="field-type">ObjectId</span><span class="field-desc">Cajero asignado</span></div>
+      <div class="field"><span class="field-name">opening_amount</span><span class="field-type">Number</span><span class="field-desc">Fondo inicial</span></div>
+      <div class="field"><span class="field-name">expected_amount</span><span class="field-type">Number</span><span class="field-desc">Lo que debería haber según sistema</span></div>
+      <div class="field"><span class="field-name">actual_amount</span><span class="field-type">Number</span><span class="field-desc">Conteo físico al cerrar</span></div>
+      <div class="field"><span class="field-name">difference</span><span class="field-type">Number</span><span class="field-desc">Sobrante/faltante</span></div>
+      <div class="field"><span class="field-name">sales_count</span><span class="field-type">Number</span></div>
+      <div class="field"><span class="field-name">totals_by_method</span><span class="field-type">Object</span><span class="field-desc">{ cash, card, transfer }</span></div>
+      <div class="field"><span class="field-name">opened_at</span><span class="field-type">Date</span></div>
+      <div class="field"><span class="field-name">closed_at</span><span class="field-type">Date</span></div>
+      <div class="field"><span class="field-name">status</span><span class="field-type">String</span><span class="field-desc">open / closed</span></div>
+    </div>
+  </div>
+
+  <!-- CONFIG -->
+  <div class="collection" style="--col-accent: #64748b;">
+    <div class="col-header">
+      <div class="col-icon">⚙️</div>
+      <div class="col-name">config</div>
+      <div class="col-badge">Un solo documento</div>
+    </div>
+    <div class="fields">
+      <div class="field"><span class="field-name">business</span><span class="field-type">Object</span><span class="field-desc">{ name, rfc, address, logo, phone }</span></div>
+      <div class="field"><span class="field-name">tax_settings</span><span class="field-type">Object</span><span class="field-desc">Tasas IVA, región fronteriza</span></div>
+      <div class="field"><span class="field-name">pos</span><span class="field-type">Object</span><span class="field-desc">{ ticket_footer, require_customer, auto_print }</span></div>
+      <div class="field"><span class="field-name">payment_providers</span><span class="field-type">Object</span><span class="field-desc">Credenciales de Clip/Conekta/Stripe</span></div>
+      <div class="field"><span class="field-name">inventory_alerts</span><span class="field-type">Object</span><span class="field-desc">{ send_email, webhook_url }</span></div>
+      <div class="field"><span class="field-name">loyalty</span><span class="field-type">Object</span><span class="field-desc">{ enabled, points_per_peso, redemption_rate }</span></div>
+      <div class="field"><span class="field-name">receipt</span><span class="field-type">Object</span><span class="field-desc">{ show_logo, show_rfc, custom_message }</span></div>
+    </div>
+    <div style="padding: 10px 24px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #10b981;">
+      💡 Un solo doc — cambia cualquier config sin tocar el código
+    </div>
+  </div>
+
+</div>
+
+<!-- FLUJO DE VENTA -->
+<div class="flow">
+  <h2>🔄 Flujo de una venta con tarjeta</h2>
+  <div class="flow-steps">
+    <div class="step">
+      <div class="step-num" style="--step-color: #3b82f6">1</div>
+      <div class="step-label">Cajero abre caja (cash_registers)</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="step">
+      <div class="step-num" style="--step-color: #f97316">2</div>
+      <div class="step-label">Escanea productos (products + inventory)</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="step">
+      <div class="step-num" style="--step-color: #a855f7">3</div>
+      <div class="step-label">Selecciona "pago tarjeta"</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="step">
+      <div class="step-num" style="--step-color: #ec4899">4</div>
+      <div class="step-label">Crea payment_transaction → llama API (Clip/Stripe)</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="step">
+      <div class="step-num" style="--step-color: #10b981">5</div>
+      <div class="step-label">Si aprobado → crea sale, descuenta inventory</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="step">
+      <div class="step-num" style="--step-color: #f59e0b">6</div>
+      <div class="step-label">Registra inventory_movement (out)</div>
+    </div>
+    <div class="arrow">›</div>
+    <div class="step">
+      <div class="step-num" style="--step-color: #06b6d4">7</div>
+      <div class="step-label">Imprime ticket / cierre de caja</div>
+    </div>
+  </div>
+</div>
+
+<!-- TIPS -->
+<div class="diagram-note">
+  <h2>⚡ Decisiones clave de diseño para MongoDB</h2>
+  <div class="tips-grid">
+    <div class="tip">
+      <h3>📌 Embeber vs Referenciar</h3>
+      <p>Los items de venta se EMBEBEN en sales (snapshot) porque el precio puede cambiar. Si el producto se modifica mañana, la venta histórica queda intacta.</p>
+    </div>
+    <div class="tip">
+      <h3>🧩 attributes en products</h3>
+      <p>El campo Object libre permite agregar campos nuevos por categoría sin migrar la colección. Solo actualiza el doc de categories.custom_fields.</p>
+    </div>
+    <div class="tip">
+      <h3>💳 Proveedores de pago</h3>
+      <p>Guarda SIEMPRE el raw_response del proveedor. Nunca almacenes datos sensibles de tarjeta — solo last4 + brand. Usa Clip, Conekta o Stripe en México.</p>
+    </div>
+    <div class="tip">
+      <h3>📊 Índices recomendados</h3>
+      <p>products: [sku, category_id, name_text] · sales: [created_at, cashier_id, status] · inventory: [product_id+warehouse_id unique]</p>
+    </div>
+    <div class="tip">
+      <h3>🔄 inventory_movements</h3>
+      <p>NUNCA modifiques stock directamente — siempre pasa por un movimiento. Así tienes auditoría completa y puedes reconstruir el inventario en cualquier punto del tiempo.</p>
+    </div>
+    <div class="tip">
+      <h3>⚙️ Colección config</h3>
+      <p>Un solo documento con toda la configuración del negocio. Cambia logos, folios, proveedor de pagos o textos del ticket sin tocar código ni reiniciar el servidor.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Diseño DB Minisuper POS · MongoDB · 11 colecciones · Generado con Claude</p>
+</footer>
+
+</body>
+</html>
