@@ -9,13 +9,13 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from './entities/user.entity';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from 'src/auth/login.dto';
+import { LoginDto } from 'src/auth/dto/login.dto';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
-  ) {}
+  ) { }
 
   async create(createUserDto: CreateUserDto) {
     console.log(createUserDto);
@@ -27,23 +27,26 @@ export class UserService {
     let todos = await this.userModel.find().exec();
     return todos;
   }
-
-  async findOneFilter(logindto: LoginDto) {
+  //For login 
+  async findAuthUser(logindto: LoginDto): Promise<Omit<User, 'password'>> {
     let user = await this.userModel
       .findOne({ isActive: true, email: logindto.email })
+      .select('-createAt -updateAt')
       .exec();
     if (!user) throw new NotFoundException('Usuario no encontrado');
-    let isMatch = await bcrypt.compare(logindto.password, user?.password);
+    let isMatch = await bcrypt.compare(logindto.password, user.password);
     if (!isMatch) {
       throw new UnauthorizedException();
     }
-    return user;
+    const { password, ...result } = user.toObject();
+    return result;
   }
 
   async findOne(id: string) {
-    let user = await this.userModel.findById(id).exec();
-    console.log(user?.id);
-    return user?.id;
+    let user = await this.userModel
+      .findById(id)
+      .exec();
+    return user;
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {

@@ -5,6 +5,9 @@ import { RolesUser } from '../dto/roles-user';
 
 @Schema()
 export class User {
+
+  @Prop({ type: Types.ObjectId })
+  id: Types.ObjectId;
   @Prop({ required: true })
   name: string;
 

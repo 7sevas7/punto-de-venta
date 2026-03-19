@@ -17,17 +17,19 @@ export class Category {
     @Prop()
     default_iva: number;
 
-    @Prop()
+    @Prop({ default: false })
     age_restricted: boolean;
+
     //En caso de que mostrar para ingresar cantidad de piezas, es necesario que sea el peso
-    @Prop()
+    @Prop({ default: false })
     requires_weight: boolean;
 
     //Basicmanete son palabras reservadas o claves paraidentificar los productos 
     @Prop({ type: [String], default: [] })
     custom_fields: Array<string>
 
-
+    @Prop()
+    sort_order: number;
 
     @Prop({ default: Date.now })
     createAt: number;
