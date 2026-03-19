@@ -8,17 +8,22 @@ import {
   Delete,
   ParseUUIDPipe,
   ConflictException,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ValidationPipe } from '../common/pipes/validation.pipe';
 import { EnumTypeRegistry } from '../common/pipes/alias.properties';
+import { AuthGuard, Public } from '../auth/auth.guard';
 
+
+@UseGuards(AuthGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
+  @Public()
   @Post()
   async create(
     @Body(new ValidationPipe(EnumTypeRegistry.CreateUserDto))
