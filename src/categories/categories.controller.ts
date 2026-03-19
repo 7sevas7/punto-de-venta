@@ -2,13 +2,18 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { UseGuards } from '@nestjs/common';
+import { ValidationPipe } from '@common/pipes/validation.pipe';
+import { EnumTypeRegistry } from '@common/pipes/alias.properties';
 
+@UseGuards(AuthGuard)
 @Controller('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(private readonly categoriesService: CategoriesService) { }
 
   @Post()
-  create(@Body() createCategoryDto: CreateCategoryDto) {
+  create(@Body(new ValidationPipe(EnumTypeRegistry.CreateCategoryDto)) createCategoryDto: CreateCategoryDto) {
     return this.categoriesService.create(createCategoryDto);
   }
 

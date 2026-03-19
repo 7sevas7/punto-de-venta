@@ -1,22 +1,23 @@
-import { Prop, Schema, } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory, } from "@nestjs/mongoose";
 import * as mongoose from 'mongoose';
 @Schema()
 export class Category {
 
     @Prop({ type: mongoose.Schema.Types.ObjectId })
     id: mongoose.Types.ObjectId;
-    @Prop()
+    @Prop({ default: '' })
     name: string;
 
-    @Prop()
+    @Prop({ default: '' })
     slug: string;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category' })
-    parent_id: Category;
-    @Prop()
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: undefined, required: false })
+    parent_id?: Category | null;
+
+    @Prop({ default: '' })
     icon: string;
 
-    @Prop()
+    @Prop({ default: 0 })
     default_iva: number;
 
     @Prop({ default: false })
@@ -28,15 +29,17 @@ export class Category {
 
     //Basicmanete son palabras reservadas o claves paraidentificar los productos 
     @Prop({ type: [String], default: [] })
-    custom_fields: Array<string>
+    custom_fields?: string[]
 
-    @Prop()
+    @Prop({ default: 0 })
     sort_order: number;
 
     @Prop({ default: Date.now })
-    createAt: number;
+    createAt: Date;
 
     @Prop({ default: Date.now })
-    updateAt: number;
+    updateAt: Date;
 
 }
+
+export const CategorySchema = SchemaFactory.createForClass(Category);

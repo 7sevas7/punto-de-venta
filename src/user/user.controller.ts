@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  ParseUUIDPipe,
   ConflictException,
   UseGuards,
 } from '@nestjs/common';
