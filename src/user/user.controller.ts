@@ -28,12 +28,7 @@ export class UserController {
     @Body(new ValidationPipe(EnumTypeRegistry.CreateUserDto))
     createUserDto: CreateUserDto,
   ): Promise<any> {
-    try {
-      return await this.userService.create(createUserDto);
-    } catch (error) {
-      const field = Object.keys(error.keyValue)[0];
-      throw new ConflictException(`El field ${field} ya esta registrado`);
-    }
+    return await this.userService.create(createUserDto);
   }
 
   @Get()

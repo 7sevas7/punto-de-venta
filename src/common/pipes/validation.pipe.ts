@@ -10,7 +10,7 @@ import { EnumTypeRegistry, AliasRegistry } from './alias.properties';
 
 @Injectable()
 export class ValidationPipe implements PipeTransform<any> {
-  constructor(public typeDto: EnumTypeRegistry) {}
+  constructor(public typeDto: EnumTypeRegistry) { }
   async transform(value: any, { metatype }: ArgumentMetadata) {
     if (!metatype || !this.toValidate(metatype)) {
       return value;
@@ -26,7 +26,7 @@ export class ValidationPipe implements PipeTransform<any> {
         ),
       }));
       throw new BadRequestException({
-        message: 'Validation failed',
+        message: 'Error de validación',
         errors: mapErrors,
       });
     }

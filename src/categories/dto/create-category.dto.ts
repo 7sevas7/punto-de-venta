@@ -13,7 +13,7 @@ export class CreateCategoryDto {
     slug: string;
 
 
-    @IsOptional() // 👈 Faltaba esto
+    @IsOptional()
     @IsMongoId()
     parent_id?: Types.ObjectId;
 

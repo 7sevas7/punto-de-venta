@@ -3,11 +3,12 @@ import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, ConflictException } from '@nestjs/common';
 import { ValidationPipe } from '@common/pipes/validation.pipe';
 import { EnumTypeRegistry } from '@common/pipes/alias.properties';
 import { Category } from './entities/category.entity';
 import { mapTo } from '@common/utils/map.util';
+import { Console } from 'console';
 
 
 @UseGuards(AuthGuard)
@@ -16,9 +17,18 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) { }
 
   @Post()
-  create(@Body(new ValidationPipe(EnumTypeRegistry.CreateCategoryDto)) createCategoryDto: CreateCategoryDto) {
-    let category = mapTo(Category, createCategoryDto);
-    return this.categoriesService.create(category);
+  async create(@Body(new ValidationPipe(EnumTypeRegistry.CreateCategoryDto)) createCategoryDto: CreateCategoryDto): Promise<any> {
+    try {
+
+      let category = mapTo(Category, createCategoryDto);
+      return await this.categoriesService.create(category);
+    } catch (error) {
+      const field = Object.keys(error.keyValue)[0];
+      console.log(field);
+      console.log("---------------------")
+      const value = error.keyValue[field];
+      throw new ConflictException(`El field ${field} con el valor ${value} ya esta registrado`);
+    }
   }
 
   @Get()

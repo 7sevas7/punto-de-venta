@@ -9,7 +9,7 @@ export class Product {
     @Prop({ type: Types.ObjectId })
     id: Types.ObjectId;
 
-    @Prop()
+    @Prop({ required: true })
     sku: string;//Codigo de barras o codigo manual
 
     @Prop({ required: true })
@@ -30,15 +30,16 @@ export class Product {
     @Prop()
     prices: number;//Precio del producto
 
-    @Prop()
+    @Prop({ default: 0 })
     tax_current: number;//Impuesto actual del producto
 
     @Prop()
     image?: string;
-    @Prop()
-    attributes?: Array<string>;//Atributos del producto
 
-    @Prop()
+    @Prop({ default: [] })
+    attributes?: string[];//Atributos del producto
+
+    @Prop({ default: true })
     is_active: boolean;//Estado del producto
 
     @Prop({ default: Date.now })

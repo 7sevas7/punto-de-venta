@@ -1,16 +1,19 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { UserService } from 'src/user/user.service';
-import { UserModule } from 'src/user/user.module';
+
+
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from 'src/user/entities/user.entity';
 
 @Module({
   controllers: [AuthController],
   providers: [AuthService],
   imports: [
-    UserModule,
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],

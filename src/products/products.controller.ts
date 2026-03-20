@@ -1,21 +1,21 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, HttpStatus, ConflictException } from '@nestjs/common';
+
+
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { mapTo } from '@common/utils/map.util';
+import { Product } from './entities/product.entity';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) { }
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    try {
-      return this.productsService.create(createProductDto);
-    } catch (error) {
-      console.log(error.message);
-      console.log("---------------------");
-      throw new HttpException({ message: "Es un error del servidor" }, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+  async create(@Body() createProductDto: CreateProductDto) {
+    console.log("Creando producto");
+    let product = mapTo(Product, createProductDto);
+    return await this.productsService.create(product);
 
   }
 

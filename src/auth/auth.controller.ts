@@ -4,14 +4,15 @@ import { LoginDto } from './dto/login.dto';
 import { EnumTypeRegistry } from '@common/pipes/alias.properties';
 import { ValidationPipe } from '@common/pipes/validation.pipe';
 import { JwtService } from '@nestjs/jwt';
-import { AuthGuard } from './auth.guard';
+import { AuthGuard, Public } from './auth.guard';
 
 
-
+@UseGuards(AuthGuard)
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService, private jwtService: JwtService) { }
 
+  @Public()
   @HttpCode(HttpStatus.OK)
   @Post()
   async login(@Body(new ValidationPipe(EnumTypeRegistry.LoginDto)) loginDto: LoginDto) {
@@ -22,7 +23,7 @@ export class AuthController {
     };
   }
 
-  @UseGuards(AuthGuard)
+
   @Get()
   async profile(@Request() req) {
     return req.user;
