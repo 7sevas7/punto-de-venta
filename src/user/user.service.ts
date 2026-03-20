@@ -10,23 +10,15 @@ import { User } from './entities/user.entity';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { LoginDto } from 'src/auth/dto/login.dto';
+import { FactoryCrud } from 'src/common/factory/crud.factory';
 
 @Injectable()
-export class UserService {
+export class UserService extends FactoryCrud<User> {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
-  ) { }
+  ) { super(userModel) }
 
-  async create(createUserDto: CreateUserDto) {
-    console.log(createUserDto);
-    let nuevo = new this.userModel(createUserDto);
-    return await nuevo.save();
-  }
 
-  async findAll() {
-    let todos = await this.userModel.find().exec();
-    return todos;
-  }
   //For login 
   async findAuthUser(logindto: LoginDto): Promise<Omit<User, 'password'>> {
     let user = await this.userModel

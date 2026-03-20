@@ -1,33 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { CreateCategoryDto } from './dto/create-category.dto';
-import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Category } from './entities/category.entity';
 import { Model } from 'mongoose';
+import { FactoryCrud } from '@common/factory/crud.factory';
 
 @Injectable()
-export class CategoriesService {
-  constructor(@InjectModel(Category.name) private readonly categoryModel: Model<Category>) { }
+export class CategoriesService extends FactoryCrud<Category> {
+  constructor(@InjectModel(Category.name) categoryModel: Model<Category>) { super(categoryModel) }
 
 
-  async create(createCategoryDto: CreateCategoryDto) {
-    let nuevo = new this.categoryModel(createCategoryDto);
-    return await nuevo.save();
-  }
-
-  async findAll() {
-    return await this.categoryModel.find().exec();
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
-  }
-
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} category`;
-  }
 }

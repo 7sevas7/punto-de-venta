@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, BadRequestException } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -6,6 +6,9 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { ValidationPipe } from '@common/pipes/validation.pipe';
 import { EnumTypeRegistry } from '@common/pipes/alias.properties';
+import { Category } from './entities/category.entity';
+import { mapTo } from '@common/utils/map.util';
+
 
 @UseGuards(AuthGuard)
 @Controller('categories')
@@ -14,7 +17,8 @@ export class CategoriesController {
 
   @Post()
   create(@Body(new ValidationPipe(EnumTypeRegistry.CreateCategoryDto)) createCategoryDto: CreateCategoryDto) {
-    return this.categoriesService.create(createCategoryDto);
+    let category = mapTo(Category, createCategoryDto);
+    return this.categoriesService.create(category);
   }
 
   @Get()
@@ -24,16 +28,20 @@ export class CategoriesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.categoriesService.findOne(+id);
+    return this.categoriesService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
-    return this.categoriesService.update(+id, updateCategoryDto);
+  @Patch()
+  update(@Body() updateCategoryDto: UpdateCategoryDto) {
+    let category = mapTo(Category, updateCategoryDto);
+    if (!category.id) {
+      throw new BadRequestException('Id de categoría requerido');
+    }
+    return this.categoriesService.update(category.id.toString(), category);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.categoriesService.remove(+id);
+    return this.categoriesService.remove(id);
   }
 }

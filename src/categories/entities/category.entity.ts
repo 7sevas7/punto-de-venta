@@ -11,7 +11,7 @@ export class Category {
     @Prop({ default: '' })
     slug: string;
 
-    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: undefined, required: false })
+    @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null, required: false })
     parent_id?: Category | null;
 
     @Prop({ default: '' })
