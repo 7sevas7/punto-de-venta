@@ -16,7 +16,6 @@ export class ProductsController {
     console.log("Creando producto");
     let product = mapTo(Product, createProductDto);
     return await this.productsService.create(product);
-
   }
 
   @Get()

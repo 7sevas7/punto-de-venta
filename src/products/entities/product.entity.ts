@@ -12,22 +12,22 @@ export class Product {
     @Prop({ required: true })
     sku: string;//Codigo de barras o codigo manual
 
-    @Prop({ required: true })
+    @Prop({ required: true, })
     name: string;
 
     @Prop()
     description: string;
 
-    @Prop({ type: Types.ObjectId, ref: 'Category' })
+    @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
     category_id: Category;
 
     @Prop()
     brand: string;//Marca del producto
 
-    @Prop()
-    unit: string;//Tipo de unidad del producto, pieza, kg, litro, etc...
+    @Prop({ required: true })//Tipo de unidad del producto, pieza, kg, litro, etc...
+    unit: string;
 
-    @Prop()
+    @Prop({ required: true, default: 1 })
     prices: number;//Precio del producto
 
     @Prop({ default: 0 })
@@ -53,3 +53,9 @@ export class Product {
 export const ProductSchema = SchemaFactory.createForClass(Product);
 
 ProductSchema.index({ sku: 1 }, { unique: true });
+ProductSchema.index({ name: 1 }, { unique: true });
+ProductSchema.pre('save', function () {
+    this.updateAt = Date.now();
+    this.sku = this.sku.toUpperCase();
+});
+

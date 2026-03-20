@@ -15,7 +15,7 @@ export class CreateProductDto {
     @IsOptional()
     description?: string;
 
-    @IsOptional()
+    @IsNotEmpty({ message: 'Categoria de producto requerida' })
     @IsMongoId({ message: 'Ingresa un id de categoria valido' })
     category_id: Types.ObjectId;
 
@@ -24,8 +24,8 @@ export class CreateProductDto {
     brand?: string;//Marca
 
     @IsString({ message: 'Ingresa una unidad valida' })
-    @IsOptional()
-    unit?: string;//Unidad pieza, kg, metro etc...
+    @IsNotEmpty({ message: 'Unidad de producto requerido' })
+    unit: string;//Unidad pieza, kg, metro etc...
 
 
     @IsNumber({}, { message: 'Ingresa un precio valido' })
