@@ -7,9 +7,9 @@ import { Model } from 'mongoose';
 import { FactoryCrud } from '@common/factory/crud.factory';
 
 @Injectable()
-export class ProductsService extends FactoryCrud<Product> {
+export class ProductsService extends FactoryCrud<Product, CreateProductDto, UpdateProductDto> {
 
   constructor(
-    @InjectModel(Product.name) private readonly productModel: Model<Product>
-  ) { super(productModel) }
+    @InjectModel(Product.name) model: Model<Product>
+  ) { super(model) }
 }

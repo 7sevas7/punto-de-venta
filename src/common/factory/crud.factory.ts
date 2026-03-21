@@ -2,10 +2,10 @@ import { Model } from "mongoose";
 import { ConflictException, NotFoundException, InternalServerErrorException, HttpException, HttpStatus } from "@nestjs/common";
 
 
-export abstract class FactoryCrud<T> {
+export abstract class FactoryCrud<T, CreateDto, UpdateDto> {
     constructor(private readonly model: Model<T>) { }
 
-    async create(createDto: Partial<T>) {
+    async create(createDto: CreateDto) {
         try {
             let nuevo = new this.model(createDto);
             return await nuevo.save();
@@ -37,14 +37,32 @@ export abstract class FactoryCrud<T> {
         return await this.model.findById(id).exec();
     }
 
-    async update(id: string, updateDto: Partial<T>): Promise<T> {
+    async update(id: string, updateDto: Partial<UpdateDto>): Promise<T> {
+        try {
 
-        let user = await this.model.findById(id).exec();
-        if (!user) {
-            throw new NotFoundException('Usuario no encontrado');
+            let user = await this.model.findById(id).exec();
+            if (!user) {
+                throw new NotFoundException('Usuario no encontrado');
+            }
+
+            return await user.updateOne(updateDto);
+
+        } catch (error) {
+            if (error.code === 11000) {
+                const field = Object.keys(error.keyValue)[0];
+                const value = error.keyValue[field];
+                throw new ConflictException(`El field ${field} con el valor ${value} ya esta registrado`);
+            }
+            throw new HttpException(
+                {
+                    statusCode: 500,
+                    message: 'Error al actualizar el producto',
+                    error: error.message,
+                },
+                HttpStatus.INTERNAL_SERVER_ERROR,
+            );
+
         }
-
-        return await user.updateOne(updateDto);
     }
 
     async remove(id: string): Promise<any> {

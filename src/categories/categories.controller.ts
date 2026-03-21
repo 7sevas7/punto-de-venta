@@ -19,9 +19,7 @@ export class CategoriesController {
   @Post()
   async create(@Body(new ValidationPipe(EnumTypeRegistry.CreateCategoryDto)) createCategoryDto: CreateCategoryDto): Promise<any> {
     try {
-
-      let category = mapTo(Category, createCategoryDto);
-      return await this.categoriesService.create(category);
+      return await this.categoriesService.create(createCategoryDto);
     } catch (error) {
       const field = Object.keys(error.keyValue)[0];
       console.log(field);
@@ -43,11 +41,11 @@ export class CategoriesController {
 
   @Patch()
   update(@Body() updateCategoryDto: UpdateCategoryDto) {
-    let category = mapTo(Category, updateCategoryDto);
-    if (!category.id) {
+
+    if (!updateCategoryDto.id) {
       throw new BadRequestException('Id de categoría requerido');
     }
-    return this.categoriesService.update(category.id.toString(), category);
+    return this.categoriesService.update(updateCategoryDto.id.toString(), updateCategoryDto);
   }
 
   @Delete(':id')

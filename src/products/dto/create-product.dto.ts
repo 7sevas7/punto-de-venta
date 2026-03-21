@@ -39,11 +39,11 @@ export class CreateProductDto {
     @IsString({ message: 'Ingresa una imagen valida' })
     @IsOptional()
     image?: string;
-
-    @IsNumber({}, { message: 'Ingresa un stock valido' })
-    @IsPositive({ message: 'Ingresa un stock valido' })
-    stock: number;
-
+    /*
+        @IsNumber({}, { message: 'Ingresa un stock valido' })
+        @IsPositive({ message: 'Ingresa un stock valido' })
+        stock: number;
+    */
     @IsArray({ message: 'Ingresa un array de atributos' })
     @IsString({ each: true, message: 'Cada atributo debe ser una cadena' })
     @IsOptional()

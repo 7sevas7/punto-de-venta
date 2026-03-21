@@ -41,12 +41,11 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch()
   async update(
-    @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<any> {
-    return await this.userService.update(id, updateUserDto);
+    return await this.userService.update(updateUserDto.id, updateUserDto);
   }
 
   @Delete(':id')

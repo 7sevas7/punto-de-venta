@@ -15,25 +15,25 @@ export class Product {
     @Prop({ required: true, })
     name: string;
 
-    @Prop()
+    @Prop({ default: '' })
     description: string;
 
     @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
     category_id: Category;
 
-    @Prop()
+    @Prop({ default: '' })
     brand: string;//Marca del producto
 
     @Prop({ required: true })//Tipo de unidad del producto, pieza, kg, litro, etc...
     unit: string;
 
-    @Prop({ required: true, default: 1 })
+    @Prop({ required: true })
     prices: number;//Precio del producto
 
     @Prop({ default: 0 })
     tax_current: number;//Impuesto actual del producto
 
-    @Prop()
+    @Prop({ default: null })
     image?: string;
 
     @Prop({ default: [] })
